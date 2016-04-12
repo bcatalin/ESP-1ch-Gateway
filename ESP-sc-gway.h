@@ -11,8 +11,8 @@
 // ----------------------------------------------------------------------------------------
 
 // WiFi definitions
-#define _SSID "YOUR-WIFI-SSID"
-#define _PASS "YOUR-WIFI-PASSWORD"
+#define _SSID "<YOUR-WIFI-SSID>"
+#define _PASS "<YOUR-WIFI-PASSWORD>"
 
 // MQTT definitions
 #define _TTNSERVER "croft.thethings.girovito.nl"
@@ -20,10 +20,10 @@
 
 // Gateway Ident definitions
 #define _DESCRIPTION "ESP Gateway"
-#define _EMAIL "mw12554@hotmail.com"
+#define _EMAIL "<YOUR EMAIL>"
 #define _PLATFORM "ESP8266"
-#define _LAT 52.2098884
-#define _LON 6.0106303000000025
+#define _LAT 52.0000000
+#define _LON 6.00000000
 #define _ALT 0
 
 #define STATISTICS 1			// Gather statistics on sensor and Wifi status
