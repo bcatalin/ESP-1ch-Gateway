@@ -10,7 +10,8 @@ The code is for testing and development purposes only, and is not meant
 for production usage. 
 
 Source Code is based on code base of Single Channel gateway for RaspberryPI
-which is developed by Thomas Telkamp.
+which is developed by Thomas Telkamp. Code was ported and extended to run
+on ESP 8266 mcu.
 
 Maintained by Maarten Westenberg (mw12554@hotmail.com)
 
@@ -20,6 +21,9 @@ Features
 - SF7 to SF12
 - status updates
 - can forward to two servers
+- DNS support for server lookup
+- NTP Support
+- Webserver support (port 8080)
 
 Not (yet) supported:
 - PACKET_PUSH_ACK processing
