@@ -33,8 +33,11 @@ Not (yet) supported:
 
 Dependencies
 ------------
-- SPI needs to be enabled on the Raspberry Pi (use raspi-config)
-- gBase64 library, pubsubclient-2.4
+
+- gBase64 library, The gBase library is actually a base64 library made 
+	by Adam Rudd (url=https://github.com/adamvr/arduino-base64). I changed the name because I had
+	another base64 library installed on my system and they did not coexist well.
+- pubsubclient-2.4
 
 Connections
 -----------
