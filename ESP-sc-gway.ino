@@ -38,7 +38,7 @@ extern "C" {
 #include "lwip/dns.h"
 }
 #include <pins_arduino.h>
-#include <gBase64.h>
+#include <gBase64.h>							// url=https://github.com/adamvr/arduino-base64 (I changed the name)
 #include "ESP-sc-gway.h"						// This file contains configuration of GWay
 
 int debug=1;									// Debug level! 0 is no msgs, 1 normal, 2 is extensive
