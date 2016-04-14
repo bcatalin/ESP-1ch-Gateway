@@ -945,7 +945,6 @@ String WifiServer(char *cmd, char *arg) {
 	response +="<br>";
 		
 	response +="<h2>WiFi Config</h2>";
-	
 	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
 	response +="<tr>";
 	response +="<th style=\"background-color: green; color: white;\">Parameter</th>";
@@ -959,22 +958,34 @@ String WifiServer(char *cmd, char *arg) {
 	response +="</table>";
 	
 	response +="<h2>System Status</h2>";
-	response +="Free Heap: "; response += ESP.getFreeHeap();
-	response +="<br>ESP Chip ID    : "; response += ESP.getChipId();
-			
+	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
+	response +="<tr>";
+	response +="<th style=\"background-color: green; color: white;\">Parameter</th>";
+	response +="<th style=\"background-color: green; color: white;\">Value</th>";
+	response +="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">Free heap</td><td style=\"border: 1px solid black;\">"; response+=ESP.getFreeHeap(); response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">ESP Chip ID</td><td style=\"border: 1px solid black;\">"; response+=ESP.getChipId(); response+="</tr>";
+	response +="</table>";
+		
 	response +="<h2>LoRa Status</h2>";
-	response +="    Frequency :    "; response += freq;
-	response +="<br>Spreading Factor: "; response += sf;	
-	// The MAC array is always returned in
-	response +="<br>Gateway ID: "; 
-	response +=String(MAC_array[0],HEX); 
+	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
+	response +="<tr>";
+	response +="<th style=\"background-color: green; color: white;\">Parameter</th>";
+	response +="<th style=\"background-color: green; color: white;\">Value</th>";
+	response +="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">Frequency</td><td style=\"border: 1px solid black;\">"; response+=freq; response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">Spreading Factor</td><td style=\"border: 1px solid black;\">"; response+=sf; response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">Gateway ID</td><td style=\"border: 1px solid black;\">";	
+	response +=String(MAC_array[0],HEX);									// The MAC array is always returned in lowercase
 	response +=String(MAC_array[1],HEX); 
 	response +=String(MAC_array[2],HEX); 
 	response +="ffff"; 
 	response +=String(MAC_array[3],HEX); 
 	response +=String(MAC_array[4],HEX); 
-	response +=String(MAC_array[5],HEX);	
-			
+	response +=String(MAC_array[5],HEX);
+	response+="</tr>";
+	response +="</table>";
+		
 	response +="<h2>Statistics</h2>";
 	delay(1);
 	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
