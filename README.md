@@ -37,6 +37,7 @@ Dependencies
 - gBase64 library, The gBase library is actually a base64 library made 
 	by Adam Rudd (url=https://github.com/adamvr/arduino-base64). I changed the name because I had
 	another base64 library installed on my system and they did not coexist well.
+- Time library (http://playground.arduino.cc/code/time)
 - pubsubclient-2.4
 
 Connections

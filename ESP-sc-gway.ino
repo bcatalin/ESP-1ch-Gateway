@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (c) 2016 Maarten Westenberg version for ESP8266
  * Copyright (c) 2015 Thomas Telkamp for initial Raspberry Version
@@ -28,7 +27,7 @@
 #include <sys/time.h>
 #include <cstring>
 #include <SPI.h>
-#include <Time.h>
+#include <Time.h>								// http://playground.arduino.cc/code/time
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <WiFiUDP.h>
@@ -38,7 +37,7 @@ extern "C" {
 #include "lwip/dns.h"
 }
 #include <pins_arduino.h>
-#include <gBase64.h>							// url=https://github.com/adamvr/arduino-base64 (I changed the name)
+#include <gBase64.h>							// https://github.com/adamvr/arduino-base64 (I changed the name)
 #include "ESP-sc-gway.h"						// This file contains configuration of GWay
 
 int debug=1;									// Debug level! 0 is no msgs, 1 normal, 2 is extensive
@@ -64,27 +63,27 @@ char MAC_char[18];
 
 /*******************************************************************************
  *
- * Configure these values!
+ * Configure these values if necessary!
  *
- * Gateway ID:  b8:27:eb:ff:ff:0d:35:e0
  *******************************************************************************/
 
 // SX1276 - ESP8266 connections
 int ssPin = 15;									// GPIO15, D8
 int dio0  = 5;									// GPIO5,  D1
-int RST   = 0;									// GPIO16, D0
+int RST   = 0;									// GPIO16, D0, not connected
 
 // Set spreading factor (SF7 - SF12)
 sf_t sf = SF7;
 
 // Set center frequency. If in doubt, choose the first one, comment all others
-//uint32_t  freq = 868100000; 					// in Mhz! (868.1)
-//uint32_t  freq = 868300000; 					// in Mhz! (868.3)
+// Each "real" gateway should support the first 3 frequencies according to LoRa spec.
+uint32_t  freq = 868100000; 					// Channel 0, 868.1 MHz
+//uint32_t  freq = 868300000; 					// Channel 1, 868.3 MHz
 //uint32_t  freq = 868500000; 					// in Mhz! (868.5)
 //uint32_t  freq = 867100000; 					// in Mhz! (867.1)
 //uint32_t  freq = 867300000; 					// in Mhz! (867.3)
 //uint32_t  freq = 867500000; 					// in Mhz! (867.5)
-uint32_t  freq = 867700000; 					// in Mhz! (867.7)
+//uint32_t  freq = 867700000; 					// in Mhz! (867.7)
 //uint32_t  freq = 867900000; 					// in Mhz! (867.9)
 //uint32_t  freq = 868800000; 					// in Mhz! (868.8)
 //uint32_t  freq = 869525000; 					// in Mhz! (869.525)
@@ -111,16 +110,14 @@ IPAddress ttnServer;							// IP Address of thethingsnetwork server
 //#define SERVER2 _MQTTSERVER      				// 2nd server to send to, e.g. private server
 //#define PORT2 "1700"
 
-//WiFiClient client;
 WiFiUDP Udp;
 uint32_t lasttime;
 
 // You can switch webserver off if not necessary
 // Probably better to leave it in though.
 #if A_SERVER==1
-#include <Streaming.h>          				//http://arduiniana.org/libraries/streaming/
+#include <Streaming.h>          				// http://arduiniana.org/libraries/streaming/
 String webPage;
-//WiFiServer server(SERVERPORT);
 ESP8266WebServer server(SERVERPORT);
 #endif
 
@@ -246,7 +243,7 @@ void printDigits(int digits)
 // ----------------------------------------------------------------------------
 // Convert a float to string for printing
 // f is value to convert
-// p is precision
+// p is precision in decimal digits
 // val is character array for results
 // ----------------------------------------------------------------------------
 void ftoa(float f, char *val, int p) {
@@ -948,14 +945,22 @@ String WifiServer(char *cmd, char *arg) {
 	response +="<br>";
 		
 	response +="<h2>WiFi Config</h2>";
-	response +="IP Address: "; response+=(IPAddress)WiFi.localIP()[0]; response+="."; response+=(IPAddress)WiFi.localIP()[1]; response+="."; response+=(IPAddress)WiFi.localIP()[2]; response+="."; response+=(IPAddress)WiFi.localIP()[3];
-	response +="<br>IP Gateway: "; response+=(IPAddress)WiFi.gatewayIP()[0]; response+="."; response+=(IPAddress)WiFi.gatewayIP()[1]; response+="."; response+=(IPAddress)WiFi.gatewayIP()[2]; response+="."; response+=(IPAddress)WiFi.gatewayIP()[3];
-	response +="<br>DNS Server: "; response+=(IPAddress)WiFi.localIP()[0]; response+="."; response+=(IPAddress)getDnsIP()[1]; response+="."; response+=(IPAddress)getDnsIP()[2]; response+="."; response+=(IPAddress)getDnsIP()[3];
-		
+	
+	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
+	response +="<tr>";
+	response +="<th style=\"background-color: green; color: white;\">Parameter</th>";
+	response +="<th style=\"background-color: green; color: white;\">Value</th>";
+	response +="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">IP Address</td><td style=\"border: 1px solid black;\">"; response+=printIP((IPAddress)WiFi.localIP()); response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">IP Gateway</td><td style=\"border: 1px solid black;\">"; response+=printIP((IPAddress)WiFi.gatewayIP()); response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">NTP Server</td><td style=\"border: 1px solid black;\">"; response+=NTP_TIMESERVER; response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">LoRa Router</td><td style=\"border: 1px solid black;\">"; response+=_TTNSERVER; response+="</tr>";
+	response +="<tr><td style=\"border: 1px solid black;\">LoRa Router IP</td><td style=\"border: 1px solid black;\">"; response+=printIP((IPAddress)ttnServer); response+="</tr>";
+	response +="</table>";
+	
 	response +="<h2>System Status</h2>";
 	response +="Free Heap: "; response += ESP.getFreeHeap();
 	response +="<br>ESP Chip ID    : "; response += ESP.getChipId();
-
 			
 	response +="<h2>LoRa Status</h2>";
 	response +="    Frequency :    "; response += freq;
@@ -972,7 +977,7 @@ String WifiServer(char *cmd, char *arg) {
 			
 	response +="<h2>Statistics</h2>";
 	delay(1);
-	response +="<table style=\"max_width: 100%; min-widt: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
+	response +="<table style=\"max_width: 100%; min-width: 40%; border: 1px solid black; border-collapse: collapse;\" class=\"config_table\">";
 	response +="<tr>";
 	response +="<th style=\"background-color: green; color: white;\">Counter</th>";
 	response +="<th style=\"background-color: green; color: white;\">Value</th>";
@@ -983,8 +988,6 @@ String WifiServer(char *cmd, char *arg) {
 	response +="<tr><td>&nbsp</td><td> </tr>";
 			
 	response +="</table>";
-
-
 
 	response +="<br>";
 	response +="<h2>Settings</h2>";
@@ -1033,6 +1036,18 @@ String stringTime(unsigned long t) {
 	response += _minute; response +=":";
 	if (_second < 10) response += "0";
 	response += _second;
+	return (response);
+}
+
+// ----------------------------------------------------------------------------
+// Output the 4-byte IP address for easy printing
+// ----------------------------------------------------------------------------
+String printIP(IPAddress ipa) {
+	String response;
+	response+=(IPAddress)ipa[0]; response+=".";
+	response+=(IPAddress)ipa[1]; response+=".";
+	response+=(IPAddress)ipa[2]; response+=".";
+	response+=(IPAddress)ipa[3];
 	return (response);
 }
 
