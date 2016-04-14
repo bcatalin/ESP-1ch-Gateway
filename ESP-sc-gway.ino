@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 //
-#define VERSION " ! V. 1.1.0, 160412"
+#define VERSION " ! V. 1.1.1, 160414"
 
 #include <ESP.h>								// No conditional compiles. This is ESP8266 only
 #include <string.h>
