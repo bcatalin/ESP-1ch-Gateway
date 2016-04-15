@@ -17,7 +17,7 @@
 //
 #define VERSION " ! V. 1.1.2, 160415"
 
-#include <Esp.h>								// No conditional compiles. This is ESP8266 only
+#include <Esp.h>
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -213,6 +213,19 @@ void die(const char *s)
 }
 
 // ----------------------------------------------------------------------------
+// Print leading '0' digits for hours(0) and second(0) when
+// printing values less than 10
+// ----------------------------------------------------------------------------
+void printDigits(int digits)
+{
+    // utility function for digital clock display: prints preceding colon and leading 0
+    if(digits < 10)
+        Serial.print(F("0"));
+    Serial.print(digits);
+}
+
+
+// ----------------------------------------------------------------------------
 // Print the current time
 // ----------------------------------------------------------------------------
 void printTime() {
@@ -225,18 +238,6 @@ void printTime() {
 	Serial.print(F(":"));
 	printDigits(second());
 	return;
-}
-
-// ----------------------------------------------------------------------------
-// Print leading '0' digits for hours(0) and second(0) when
-// printing values less than 10
-// ----------------------------------------------------------------------------
-void printDigits(int digits)
-{
-    // utility function for digital clock display: prints preceding colon and leading 0
-    if(digits < 10)
-        Serial.print(F("0"));
-    Serial.print(digits);
 }
 
 
@@ -273,12 +274,33 @@ const int NTP_PACKET_SIZE = 48;					// Fixed size of NTP record
 byte packetBuffer[NTP_PACKET_SIZE];
 
 // ----------------------------------------------------------------------------
-// Set up regular synchronization of NTP server and the local time.
+// Send the request packet to the NTP server.
+//
 // ----------------------------------------------------------------------------
-void setupTime() {
-  setSyncProvider(getNtpTime);
-  setSyncInterval(NTP_INTERVAL);
+void sendNTPpacket(IPAddress& timeServerIP) {
+  // Zeroise the buffer.
+	memset(packetBuffer, 0, NTP_PACKET_SIZE);
+	packetBuffer[0] = 0b11100011;   			// LI, Version, Mode
+	packetBuffer[1] = 0;						// Stratum, or type of clock
+	packetBuffer[2] = 6;						// Polling Interval
+	packetBuffer[3] = 0xEC;						// Peer Clock Precision
+	// 8 bytes of zero for Root Delay & Root Dispersion
+	packetBuffer[12]  = 49;
+	packetBuffer[13]  = 0x4E;
+	packetBuffer[14]  = 49;
+	packetBuffer[15]  = 52;	
+
+	Udp.beginPacket(timeServerIP, (int) 123);	// NTP Server and Port
+
+	if ((Udp.write((char *)packetBuffer, NTP_PACKET_SIZE)) != NTP_PACKET_SIZE) {
+		die("sendNtpPacket:: Error write");
+	}
+	else {
+		// Success
+	}
+	Udp.endPacket();
 }
+
 
 // ----------------------------------------------------------------------------
 // Get the NTP time from one of the time servers
@@ -311,32 +333,13 @@ time_t getNtpTime()
 }
 
 // ----------------------------------------------------------------------------
-// Send the request packet to the NTP server.
-//
+// Set up regular synchronization of NTP server and the local time.
 // ----------------------------------------------------------------------------
-void sendNTPpacket(IPAddress& timeServerIP) {
-  // Zeroise the buffer.
-	memset(packetBuffer, 0, NTP_PACKET_SIZE);
-	packetBuffer[0] = 0b11100011;   			// LI, Version, Mode
-	packetBuffer[1] = 0;						// Stratum, or type of clock
-	packetBuffer[2] = 6;						// Polling Interval
-	packetBuffer[3] = 0xEC;						// Peer Clock Precision
-	// 8 bytes of zero for Root Delay & Root Dispersion
-	packetBuffer[12]  = 49;
-	packetBuffer[13]  = 0x4E;
-	packetBuffer[14]  = 49;
-	packetBuffer[15]  = 52;	
-
-	Udp.beginPacket(timeServerIP, (int) 123);	// NTP Server and Port
-
-	if ((Udp.write((char *)packetBuffer, NTP_PACKET_SIZE)) != NTP_PACKET_SIZE) {
-		die("sendNtpPacket:: Error write");
-	}
-	else {
-		// Success
-	}
-	Udp.endPacket();
+void setupTime() {
+  setSyncProvider(getNtpTime);
+  setSyncInterval(NTP_INTERVAL);
 }
+
 
 
 // ============================================================================
@@ -378,6 +381,41 @@ int readUdp(int packetSize)
 	Serial.println();
   }
   return packetSize;
+}
+
+// ----------------------------------------------------------------------------
+// Function to join the Wifi Network
+// XXX Maybe we should make the reconnect shorter in order to avoid watchdog resets.
+//	It is a matter of returning to the main loop() asap and make sure in next loop
+//	the reconnect is done first thing.
+// ----------------------------------------------------------------------------
+int WlanConnect(char * ssid, char * password) {
+	// We start by connecting to a WiFi network 
+	Serial.print(F("WiFi connect to: ")); Serial.println(ssid);
+	int agains = 0;
+	int ledStatus = LOW;
+	WiFi.begin(ssid, password);
+	while (WiFi.status() != WL_CONNECTED) {
+		agains++;
+		delay(agains*500);
+		digitalWrite(BUILTIN_LED, ledStatus); 	// Write LED high/low
+		ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
+		if (debug>=2) Serial.print(".");
+		yield();
+		// If after 10 times there is still no connection, we probably wait forever
+		// So restart the WiFI.begin process!!
+		if (agains == 10) {
+			agains = 0;
+			Serial.println();
+			//WiFi.disconnect();
+			delay(500);
+			return(-1);
+		}
+	}
+	Serial.print(F("WiFi connected. local IP address: ")); 
+	Serial.println(WiFi.localIP());
+	yield();
+	return(0);
 }
 
 // ----------------------------------------------------------------------------
@@ -439,41 +477,6 @@ bool UDPconnect() {
 		//Serial.println("Connection failed");
 	}
 	return(ret);
-}
-
-// ----------------------------------------------------------------------------
-// Function to join the Wifi Network
-// XXX Maybe we should make the reconnect shorter in order to avoid watchdog resets.
-//	It is a matter of returning to the main loop() asap and make sure in next loop
-//	the reconnect is done first thing.
-// ----------------------------------------------------------------------------
-int WlanConnect(char * ssid, char * password) {
-	// We start by connecting to a WiFi network 
-	Serial.print(F("WiFi connect to: ")); Serial.println(ssid);
-	int agains = 0;
-	int ledStatus = LOW;
-	WiFi.begin(ssid, password);
-	while (WiFi.status() != WL_CONNECTED) {
-		agains++;
-		delay(agains*500);
-		digitalWrite(BUILTIN_LED, ledStatus); 	// Write LED high/low
-		ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
-		if (debug>=2) Serial.print(".");
-		yield();
-		// If after 10 times there is still no connection, we probably wait forever
-		// So restart the WiFI.begin process!!
-		if (agains == 10) {
-			agains = 0;
-			Serial.println();
-			//WiFi.disconnect();
-			delay(500);
-			return(-1);
-		}
-	}
-	Serial.print(F("WiFi connected. local IP address: ")); 
-	Serial.println(WiFi.localIP());
-	yield();
-	return(0);
 }
 
 // =================================================================================
@@ -890,6 +893,20 @@ int receivepacket(char *buff_up) {
 // WEBSERVER FUNCTIONS (PORT 8080)
 
 #if A_SERVER==1
+
+
+// ----------------------------------------------------------------------------
+// Output the 4-byte IP address for easy printing
+// ----------------------------------------------------------------------------
+String printIP(IPAddress ipa) {
+	String response;
+	response+=(IPAddress)ipa[0]; response+=".";
+	response+=(IPAddress)ipa[1]; response+=".";
+	response+=(IPAddress)ipa[2]; response+=".";
+	response+=(IPAddress)ipa[3];
+	return (response);
+}
+
 // ----------------------------------------------------------------------------
 // WIFI SERVER
 //
@@ -1048,17 +1065,6 @@ String stringTime(unsigned long t) {
 	return (response);
 }
 
-// ----------------------------------------------------------------------------
-// Output the 4-byte IP address for easy printing
-// ----------------------------------------------------------------------------
-String printIP(IPAddress ipa) {
-	String response;
-	response+=(IPAddress)ipa[0]; response+=".";
-	response+=(IPAddress)ipa[1]; response+=".";
-	response+=(IPAddress)ipa[2]; response+=".";
-	response+=(IPAddress)ipa[3];
-	return (response);
-}
 
 #endif
 
