@@ -17,7 +17,7 @@
 //
 #define VERSION " ! V. 1.1.2, 160415"
 
-#include <ESP.h>								// No conditional compiles. This is ESP8266 only
+#include <Esp.h>								// No conditional compiles. This is ESP8266 only
 #include <string.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -30,7 +30,7 @@
 #include <Time.h>								// http://playground.arduino.cc/code/time
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <WiFiUDP.h>
+#include <WiFiUdp.h>
 extern "C" {
 #include "user_interface.h"
 #include "lwip/err.h"
