@@ -15,7 +15,7 @@
  *******************************************************************************/
 
 //
-#define VERSION " ! V. 1.1.1, 160414"
+#define VERSION " ! V. 1.1.2, 160415"
 
 #include <ESP.h>								// No conditional compiles. This is ESP8266 only
 #include <string.h>
@@ -460,9 +460,8 @@ int WlanConnect(char * ssid, char * password) {
 		ledStatus = (ledStatus == HIGH) ? LOW : HIGH;
 		if (debug>=2) Serial.print(".");
 		yield();
-		
-		//If after 10 times there is still no connection, 
-		// restart the WiFI.begin process!!
+		// If after 10 times there is still no connection, we probably wait forever
+		// So restart the WiFI.begin process!!
 		if (agains == 10) {
 			agains = 0;
 			Serial.println();
@@ -474,7 +473,6 @@ int WlanConnect(char * ssid, char * password) {
 	Serial.print(F("WiFi connected. local IP address: ")); 
 	Serial.println(WiFi.localIP());
 	yield();
-	
 	return(0);
 }
 
@@ -748,7 +746,7 @@ int receivepacket(char *buff_up) {
             
             if (sx1272) {
                 rssicorr = 139;
-            } else {												// Probably SX1276 or RFM95
+            } else {											// Probably SX1276 or RFM95
                 rssicorr = 157;
             }
 			
@@ -768,8 +766,8 @@ int receivepacket(char *buff_up) {
             int j;
 			// XXX Base64 library is nopad. So we may have to add padding characters until
 			// 	length is multiple of 4!
-			int encodedLen = base64_enc_len(receivedbytes);	// max 341
-			base64_encode(b64, message, receivedbytes); // max 341
+			int encodedLen = base64_enc_len(receivedbytes);		// max 341
+			base64_encode(b64, message, receivedbytes);			// max 341
 			
             //j = bin_to_b64((uint8_t *)message, receivedbytes, (char *)(b64), 341);
             //fwrite(b64, sizeof(char), j, stdout);
@@ -1205,7 +1203,7 @@ void loop ()
 		sendUdp(buff_up, buff_index);					// We can send to multiple sockets if necessary
 	}
 	else {
-		
+		// No message received
 	}
 	yield();
 	
