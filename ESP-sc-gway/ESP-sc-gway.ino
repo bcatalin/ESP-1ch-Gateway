@@ -908,6 +908,38 @@ String printIP(IPAddress ipa) {
 }
 
 // ----------------------------------------------------------------------------
+// stringTime
+// Only when RTC is present we print real time values
+// t contains number of milli seconds since system started that the event happened.
+// So a value of 100 wold mean that the event took place 1 minute and 40 seconds ago
+// ----------------------------------------------------------------------------
+String stringTime(unsigned long t) {
+	String response;
+	String Days[7]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
+
+	if (t==0) { response = " -none- "; return(response); }
+	
+	// now() gives seconds since 1970
+	time_t eventTime = now() - ((millis()-t)/1000);
+	byte _hour   = hour(eventTime);
+	byte _minute = minute(eventTime);
+	byte _second = second(eventTime);
+	
+	response += Days[weekday(eventTime)-1]; response += " ";
+	response += day(eventTime); response += "-";
+	response += month(eventTime); response += "-";
+	response += year(eventTime); response += " ";
+	if (_hour < 10) response += "0";
+	response += _hour; response +=":";
+	if (_minute < 10) response += "0";
+	response += _minute; response +=":";
+	if (_second < 10) response += "0";
+	response += _second;
+	return (response);
+}
+
+
+// ----------------------------------------------------------------------------
 // WIFI SERVER
 //
 // This funtion implements the WiFI Webserver (very simple one). The purpose
@@ -1034,36 +1066,6 @@ String WifiServer(char *cmd, char *arg) {
 	return (response);
 }
 
-// ----------------------------------------------------------------------------
-// stringTime
-// Only when RTC is present we print real time values
-// t contains number of milli seconds since system started that the event happened.
-// So a value of 100 wold mean that the event took place 1 minute and 40 seconds ago
-// ----------------------------------------------------------------------------
-String stringTime(unsigned long t) {
-	String response;
-	String Days[7]={"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"};
-
-	if (t==0) { response = " -none- "; return(response); }
-	
-	// now() gives seconds since 1970
-	time_t eventTime = now() - ((millis()-t)/1000);
-	byte _hour   = hour(eventTime);
-	byte _minute = minute(eventTime);
-	byte _second = second(eventTime);
-	
-	response += Days[weekday(eventTime)-1]; response += " ";
-	response += day(eventTime); response += "-";
-	response += month(eventTime); response += "-";
-	response += year(eventTime); response += " ";
-	if (_hour < 10) response += "0";
-	response += _hour; response +=":";
-	if (_minute < 10) response += "0";
-	response += _minute; response +=":";
-	if (_second < 10) response += "0";
-	response += _second;
-	return (response);
-}
 
 
 #endif
